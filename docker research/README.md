@@ -114,6 +114,8 @@ Docker works by packaging applications into isolated containers that include eve
 - Docker Client: The command-line interface (CLI) that allows users to interact with the Docker daemon using commands (e.g., docker run, docker build).
 - Docker Registry: A storage and distribution system for Docker images. Docker Hub is the default public registry, but private registries can also be used.
 
+![alt text](images/dockerarch.png)
+
 ### Success story using Docker
 
 **Spotify's Success with Docker**

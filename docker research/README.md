@@ -17,8 +17,10 @@
     - [Success story using Docker](#success-story-using-docker)
 
 # Task: Research microservices, containers and Docker
+![alt text](images/deployment.png)
 
 ## Differences between virtualisation and containerisation
+
 
 Virtualization creates multiple OS environments on a single machine using VMs.
 <br> 
@@ -59,6 +61,8 @@ Here are the benefits of virtual machines (VMs) over traditional architecture, a
 Microservices are a software architectural style where an application is built as a collection of small, independent services, each responsible for a specific function or feature.
 <br>
 Each microservice runs as a separate process and communicates with other services through lightweight APIs 
+
+![alt text](images/microservicesimage.png)
 
 1. **Independently Deployable**: Each microservice can be developed, deployed, and scaled independently without affecting others, allowing for faster updates and more flexibility.
 2. **Single Responsibility**: Each microservice is responsible for a specific business function, which helps keep the codebase modular and easier to manage.

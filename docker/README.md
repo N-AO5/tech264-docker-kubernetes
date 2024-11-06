@@ -83,12 +83,12 @@ It is a very cut down version of linux - sudo doesn't exist
 - ``` apt-get install nano``` doesn't have nano -  download it 
 - ```nano index.html``` nano into the html file
 
-![alt text](3image-2.png)
 ![alt text](images/3image-2.png)
+
 - CTRL + S and CTRL + X
 
-![alt text](image-3.png)
 ![alt text](images/4image-3.png)
+
 - ```exit``` to leave the container
 
 # Push host-custom-static-webpage container image to Docker Hub

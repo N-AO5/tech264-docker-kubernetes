@@ -15,6 +15,7 @@
     - [Alternatives](#alternatives)
     - [How it works (Docker architecture/API)](#how-it-works-docker-architectureapi)
     - [Success story using Docker](#success-story-using-docker)
+- [Task: Research Docker Compose](#task-research-docker-compose)
 
 # Task: Research microservices, containers and Docker
 ![alt text](images/deployment.png)
@@ -139,3 +140,41 @@ Containerization: Spotify adopted Docker to containerize its microservices, allo
 Development Workflow: Developers could use Docker to create consistent local development environments that mirrored production, ensuring that applications ran the same way across various stages of the pipeline.
 <br>
 CI/CD Pipeline: Docker was integrated into Spotify's Continuous Integration and Continuous Deployment (CI/CD) workflows. This integration enabled rapid testing and deployment of microservices, significantly reducing the time to ship new features.
+
+# Task: Research Docker Compose
+**Why use it?:**
+Docker compose is used to run multi-container docker applications in a configuration file "docker-compose.yaml"
+
+**How to use it:**
+You need to install docker compose and create a docker compose yaml file.
+
+**What do you need to install for it to work?:**
+- Docker engine (Docker desktop)
+- Docker compose
+
+**How to store your docker compose file?:**
+The docker compose file should be set in the root directory of the project repo.
+
+**Find out about these docker compose commands to:**
+- manage your application:
+  - start the application (without detached mode) ```docker-compose up```
+  - start the application (in detached mode) ```docker-compose up -d```
+
+**what is the difference between running your application with or without detached mode:**
+"-d" runs the container in the background (this is detached mode") so the logs won't run in the foreground and control will return to the cmd line
+
+**stop the application:**
+```docker-compose down```
+
+**run your application in detached mode:**
+```docker-compose up -d```
+
+**check services running with docker compose**
+```docker-compose ps```
+
+**view logs in real-time**
+```docker-compose logs -f```
+
+**view docker compose images**
+```docker-compose images```
+

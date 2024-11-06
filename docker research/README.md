@@ -111,6 +111,7 @@ Docker is an open-source platform that enables developers to automate the deploy
 6. Amazon ECS (Elastic Container Service)
 
 ### How it works (Docker architecture/API)
+
 Docker works by packaging applications into isolated containers that include everything needed to run them. It relies on the Docker daemon to manage containers, utilizes a client for user commands, and employs the host OS kernel to ensure efficient resource use and isolation. 
 
 **Docker Architecture**:
@@ -118,7 +119,9 @@ Docker works by packaging applications into isolated containers that include eve
 - Docker Client: The command-line interface (CLI) that allows users to interact with the Docker daemon using commands (e.g., docker run, docker build).
 - Docker Registry: A storage and distribution system for Docker images. Docker Hub is the default public registry, but private registries can also be used.
 
-![alt text](images/dockerarch.png)
+
+![alt text](images/dockerarchimage.png)
+
 
 ### Success story using Docker
 

@@ -111,8 +111,7 @@ It is a very cut down version of linux - sudo doesn't exist
 
 1. Login into your docker hub ```docker login```
 2. use the command ```docker commit <container_id> <new_image_name>```
-3. for this instance ```docker commit blissful_burnell```
-4. you can name it later using  ```docker tag <existing_image_id> <username>/<image_name>:<tag>```
+3. you can name it later using  ```docker tag <existing_image_id> <username>/<image_name>:<tag>```
 
 ## Push the image to your Docker Hub account
 use the cmd ```docker push *username*/*my_new_image*:latest```

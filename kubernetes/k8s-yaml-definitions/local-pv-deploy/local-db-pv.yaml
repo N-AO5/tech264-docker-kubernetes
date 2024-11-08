@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi  # Adjust the size according to your needs
+  accessModes:
+    - ReadWriteOnce # Ensures only one pod can read/write at a time
+  persistentVolumeReclaimPolicy: Retain  # Retains data even when the PVC is deleted
+  storageClassName: standard  # Define the storage class; use "standard" for default
+  hostPath:
+    path: /mnt/data/mongo  # Path on the host node for local storage (adjust if needed)  

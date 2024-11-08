@@ -9,7 +9,11 @@
 - [Delete service and deployment](#delete-service-and-deployment)
 - [Deploy the Sparta test app - front page](#deploy-the-sparta-test-app---front-page)
 - [Deploy the Sparta test app - with db](#deploy-the-sparta-test-app---with-db)
-- [Verify deployment](#verify-deployment)
+  - [Verify deployment](#verify-deployment)
+- [Set up 2-tier deployment with persistent volume (PV) for database](#set-up-2-tier-deployment-with-persistent-volume-pv-for-database)
+  - [create a PV and PVC (Persistent volume claim)](#create-a-pv-and-pvc-persistent-volume-claim)
+    - [To test!](#to-test)
+- [Use Horizontal Pod Autoscaler (HPA) to scale the app](#use-horizontal-pod-autoscaler-hpa-to-scale-the-app)
 
 
 # Running Kubernetes
@@ -101,8 +105,15 @@
 3. include my nodejs sparta web page image
 4. for the **deploy file** - defines the desired state of your pods
 5. the app db needs to be seeded so the cmd must be added at the end, along with an npm start
+6. some db don't need to be seeded- ours needed to be bc it only a test db- if theres already data, no need for seeding
+7. to manually seed (by going to a pod and running the command)
+   1.  ```kubectl exec -it <pod-name> -- sh``` to enter the pod
+   2.  navigate to the app file 
+   3.  run the seeds cmd ```node seeds/seed.js```
+   4.  as all pods are connected to the same db, if you seed it using one pod all the pods will hve access to a seeded db
+ 
 
-```
+```yaml
 ---
 # YAML is case sensitive
 # use spaces not a tab
@@ -128,13 +139,13 @@ spec:
         - containerPort: 3000
          env: # sets env. var. to the mongodb port 3000
         - name: DB_HOST
-          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts" # refers to the db service yaml file
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts" # refers to the db service yaml file (but don't need to specify the name space - mongodb://mongodb-svc:27017/posts)
         command: ["/bin/sh", "-c"] # cmds to use shell "-c" to run the cmd in the args section below
         args: ["node seeds/seed.js && npm start app.js"]
 ```
 7. run a create/apply ```kubectl create -f frontpage-deploy.yml```
 8. for the **service yaml file**
-```
+```yaml
 ---
 apiVersion: v1 
 kind: Service #the object being created is a service
@@ -143,9 +154,9 @@ metadata:
   namespace: default
 spec:
   ports:
-  - nodePort: 30001 #range is 30000-32768
-    port: 3000 # the port the service listens to
-    targetPort: 3000 # the port that the service forwards traffic to
+  - nodePort: 30001 #range is 30000-32768 this port is for the worker node specifically
+    port: 80 # the port the service listens to outside of the cluster (the port outside the container) - nodejs runs on 80
+    targetPort: 3000 # the port that the service forwards traffic to (the port inside the container) - this is our reverse proxy
   selector: # Specifies the label selector to match the pods managed by this service
     app: nodejs
   type: NodePort # The type of service, it is NodePort so it exposes the service on a static port on each node's IP 
@@ -157,7 +168,7 @@ spec:
 
 1. Create a separate repo for the mongo db yaml files for deployment and service
 2. For the **deploy yaml**, the format is very similar but the image is mongo
-```
+```yaml
 ---
 apiVersion: apps/v1 # specify api to use for deployment
 kind: Deployment # kind of service/object you want to create
@@ -184,7 +195,7 @@ spec:
 3. run a create/apply ```kubectl create -f db-deploy.yml```
 3. for the **service**, it is also very similar to the app svc
 4. the port should be the port for mongodb 
-```
+```yaml
 ---
 apiVersion: v1 
 kind: Service
@@ -193,18 +204,99 @@ metadata:
   namespace: default
 spec:
   ports:
-  - nodePort: 30002
+  - protocol: TCP
     port: 27017
     targetPort: 27017
-  selector:
-    app: mongodb # Label to match service to deployment
-  type: NodePort
+  type: ClusterIP # use ClusterIP (only for internal access-more secure)
 ```
 5. run a create/deploy ```kubectl create -f db-service.yml```
 
-# Verify deployment
+## Verify deployment
 1. run the ```kubectl get all``` cmd to see all the pods, services, deployments and replicasets.
 
-![alt text](images/appk8sget.png)
+![alt text](images/appk8sgetimage.png)
 
-2. check "localhost:30001" and "localhost:30001/posts" (depending on the ports you choose to expose) and the app and post page should be working
+1. check "localhost:30001" and "localhost:30001/posts" (depending on the ports you choose to expose) and the app and post page should be working
+
+# Set up 2-tier deployment with persistent volume (PV) for database
+
+## create a PV and PVC (Persistent volume claim)
+
+![alt text](images/pvandpvcimage-2.png)
+
+1. create a new repo for PV and PV "local-PV-deploy" 
+2. create a yaml file for the PV "local-db-pv" 
+   1. The PV is like a xGB storage disk on the k8s node
+   2. A reliable, durable storage space in your Kubernetes environment that can hold your data across container restarts or pod failures.
+
+```yaml
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi  # 1GB should be enough for 100 records
+  accessModes:
+    - ReadWriteOnce # Ensures only one pod can read/write at a time
+  persistentVolumeReclaimPolicy: Retain  # Retains data even when the PVC is deleted
+  storageClassName: standard  # Define the storage class; use "standard" for default
+  hostPath:
+    path: /mnt/data/mongo  # Path on the host node for local storage (adjust if needed)  
+```
+3. create a yaml file for the PV "local-db-pvc" 
+   1. the persistent volume claim is a "request" for the storage that a pod can use
+   2. PVC is the request for storage, and PV is the actual storage that gets assigned to your pod.
+
+```yaml
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  # Adjust the size as needed
+  storageClassName: standard  # Use the same storage class as the PV
+
+```
+2. run an apply for the pv and pvs ```kubectl apply -f local-db-pvc.yml``` ```kubectl apply -f local-db-pv.yml```
+3. check ```kubectl get pvc``` ```kubectl get pv``` to see the pv and pvc exist
+4. the db deployment script have a volume added to reference the pvc
+
+```yaml
+  volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc  # Reference the PVC created earlier
+
+```
+
+### To test!
+
+1. make sure your db is seeded manually by logging into a node - the seeding should not be in the deploy script for you app
+2. check what the current post page looks like
+  
+![alt text](images/postpreimage-1.png)
+
+1. Delete the db deployment/ nodes
+2. remake the db deployment
+3. verify that the post page has the same content
+
+![alt text](images/postspostimage.png)
+
+
+# Use Horizontal Pod Autoscaler (HPA) to scale the app
+
+
+
+
+Scale only the app (2 minimum, 10 maximum replicas)
+Test your scaler works by load testing
+You could use Apache Bench (ab) for load testing
+Post link to your documentation in the chat around COB
+

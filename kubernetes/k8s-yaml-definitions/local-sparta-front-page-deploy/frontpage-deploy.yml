@@ -24,5 +24,5 @@ spec:
         env:
         - name: DB_HOST
           value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
-        command: ["/bin/sh", "-c"]
-        args: ["node seeds/seed.js && npm start app.js"]
+       # command: ["/bin/sh", "-c"]
+       # args: ["node seeds/seed.js && npm start app.js"]

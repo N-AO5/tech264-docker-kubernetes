@@ -292,6 +292,36 @@ spec:
 
 # Use Horizontal Pod Autoscaler (HPA) to scale the app
 
+1. create a yaml file for teh HPA deployment 
+```yaml
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nodejs
+  minReplicas: 2        # Minimum number of pods
+  maxReplicas: 10        # Maximum number of pods
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 1  # Target CPU utilization (1% of requested CPU)
+```
+2. set the metric as CPU
+3. set the target at 1% 
+4. download apache bench ```sudo apt install apache2-utils``` (maybe not on bash- use an ubuntu terminal)
+5. load up the port with requests ```ab -n 1000000000 -c 900 http://localhost:30001/```
+
+6. check your bash terminal to see if more pods have been created
+
+![alt text](images/podsimage.png)
 
 
 

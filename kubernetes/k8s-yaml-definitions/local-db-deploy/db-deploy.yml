@@ -4,7 +4,7 @@
 apiVersion: apps/v1 # specify api to use for deployment
 kind: Deployment # kind of service/object you want to create
 metadata:
-  name: spartafullapp-deployment # name the deployment
+  name: mongodb-deployment # name the deployment
 spec:
   selector:
     matchLabels:
@@ -18,7 +18,6 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: mongo:7.0.6 # the image you creat>
+        image: mongo:7.0.6 # the image you create
         ports:
         - containerPort: 27017
-      

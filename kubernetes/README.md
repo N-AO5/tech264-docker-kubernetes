@@ -9,6 +9,7 @@
 - [Delete service and deployment](#delete-service-and-deployment)
 - [Deploy the Sparta test app - front page](#deploy-the-sparta-test-app---front-page)
 - [Deploy the Sparta test app - with db](#deploy-the-sparta-test-app---with-db)
+- [Verify deployment](#verify-deployment)
 
 
 # Running Kubernetes
@@ -59,7 +60,7 @@
 
 ## Directly edit a deployment live
 ### Method 1 - Edit notepad
-1. use ```kubectl edit *name of deplyment*```
+1. use ```kubectl edit *name of deployment*```
 2. it'll open a note pad 
 
 ![alt text](images/notepadimage.png)
@@ -98,7 +99,9 @@
 1. Create a repo for the yaml files
 2. change the nginx scripts to be for nodejs 
 3. include my nodejs sparta web page image
-4. for the deploy file
+4. for the **deploy file** - defines the desired state of your pods
+5. the app db needs to be seeded so the cmd must be added at the end, along with an npm start
+
 ```
 ---
 # YAML is case sensitive
@@ -112,38 +115,96 @@ spec:
     matchLabels:
       app: nodejs  # look for this label/tab to match the k8 service
 # create a ReplicaSet with instances/pods
-  replicas: 3
+  replicas: 3 # the number of identical pods you want to make
+  template: # defines the template for the pods being created
+    metadata: 
+      labels:
+        app: nodejs #label the pods being made, this must stay consistent
+    spec: #defines the spec for the pods being made
+      containers: # define the containers, including the images used and ports to expose
+      - name: nodejs
+        image: nao55/sparta-app-npm-run:latest # the image you create
+        ports:
+        - containerPort: 3000
+         env: # sets env. var. to the mongodb port 3000
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts" # refers to the db service yaml file
+        command: ["/bin/sh", "-c"] # cmds to use shell "-c" to run the cmd in the args section below
+        args: ["node seeds/seed.js && npm start app.js"]
+```
+7. run a create/apply ```kubectl create -f frontpage-deploy.yml```
+8. for the **service yaml file**
+```
+---
+apiVersion: v1 
+kind: Service #the object being created is a service
+metadata:
+  name: nodejs-svc # the name of the service 
+  namespace: default
+spec:
+  ports:
+  - nodePort: 30001 #range is 30000-32768
+    port: 3000 # the port the service listens to
+    targetPort: 3000 # the port that the service forwards traffic to
+  selector: # Specifies the label selector to match the pods managed by this service
+    app: nodejs
+  type: NodePort # The type of service, it is NodePort so it exposes the service on a static port on each node's IP 
+```
+9. run a create/apply ```kubectl create -f frontpage-service.yml```
+10. when you go to "localhost:30001" the front page should be running
+
+# Deploy the Sparta test app - with db
+
+1. Create a separate repo for the mongo db yaml files for deployment and service
+2. For the **deploy yaml**, the format is very similar but the image is mongo
+```
+---
+apiVersion: apps/v1 # specify api to use for deployment
+kind: Deployment # kind of service/object you want to create
+metadata:
+  name: mongodb-deployment # name the deployment
+spec:
+  selector:
+    matchLabels:
+      app: mongodb  # look for this label/tab to match the k8 service
+# create a ReplicaSet with instances/pods
+  replicas: 1 # only one replica for the db
   template:
     metadata:
       labels:
-        app: nodejs
+        app: mongodb #this references the pods being made
     spec:
       containers:
-      - name: nodejs
-        image: nao55/sparta-app-npm-run:latest # the image you creat>
+      - name: mongodb
+        image: mongo:7.0.6 # mongo image we want to use 
         ports:
-        - containerPort: 3000
+        - containerPort: 27017 # mongo operates on this port
 
 ```
-7. run a create ```kubectl create -f frontpage-deploy.yml```
-8. for the service yaml file
+3. run a create/apply ```kubectl create -f db-deploy.yml```
+3. for the **service**, it is also very similar to the app svc
+4. the port should be the port for mongodb 
 ```
 ---
 apiVersion: v1 
 kind: Service
 metadata:
-  name: nodejs-syc
+  name: mongodb-svc
   namespace: default
 spec:
   ports:
-  - nodePort: 30001 #range is 30000-32768
-    port: 3000
-    targetPort: 3000
+  - nodePort: 30002
+    port: 27017
+    targetPort: 27017
   selector:
-    app: nodejs
+    app: mongodb # Label to match service to deployment
   type: NodePort
 ```
-9. run a create ```kubectl create -f frontpage-service.yml```
-10. when you go to "localhost:30001" the front page should be running
+5. run a create/deploy ```kubectl create -f db-service.yml```
 
-# Deploy the Sparta test app - with db
+# Verify deployment
+1. run the ```kubectl get all``` cmd to see all the pods, services, deployments and replicasets.
+
+![alt text](images/appk8sget.png)
+
+2. check "localhost:30001" and "localhost:30001/posts" (depending on the ports you choose to expose) and the app and post page should be working

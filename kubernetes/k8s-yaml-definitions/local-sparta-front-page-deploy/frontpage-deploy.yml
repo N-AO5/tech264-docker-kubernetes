@@ -18,9 +18,11 @@ spec:
     spec:
       containers:
       - name: nodejs
-        image: nao55/sparta-app-npm-run:latest # the image you creat>
+        image: nao55/sparta-app-npm-run:latest # the image you create
         ports:
         - containerPort: 3000
-      env:
-      - name: DB_HOST
-        value: "mongodb://db:27017/posts"
+        env:
+        - name: DB_HOST
+          value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
+        command: ["/bin/sh", "-c"]
+        args: ["node seeds/seed.js && npm start app.js"]

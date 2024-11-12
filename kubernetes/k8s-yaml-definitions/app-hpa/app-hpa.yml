@@ -7,7 +7,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: nodejs
+    name: spartafrontpage-deployment
   minReplicas: 2        # Minimum number of pods
   maxReplicas: 10        # Maximum number of pods
   metrics:

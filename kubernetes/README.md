@@ -14,6 +14,8 @@
   - [create a PV and PVC (Persistent volume claim)](#create-a-pv-and-pvc-persistent-volume-claim)
     - [To test!](#to-test)
 - [Use Horizontal Pod Autoscaler (HPA) to scale the app](#use-horizontal-pod-autoscaler-hpa-to-scale-the-app)
+  - [Create a HPA deployment](#create-a-hpa-deployment)
+  - [install a metrics server](#install-a-metrics-server)
 
 
 # Running Kubernetes
@@ -292,6 +294,8 @@ spec:
 
 # Use Horizontal Pod Autoscaler (HPA) to scale the app
 
+## Create a HPA deployment 
+
 1. create a yaml file for teh HPA deployment 
 ```yaml
 ---
@@ -317,16 +321,50 @@ spec:
 2. set the metric as CPU
 3. set the target at 1% 
 4. download apache bench ```sudo apt install apache2-utils``` (maybe not on bash- use an ubuntu terminal)
-5. load up the port with requests ```ab -n 1000000000 -c 900 http://localhost:30001/```
-
-6. check your bash terminal to see if more pods have been created
-
-![alt text](images/podsimage.png)
 
 
+## install a metrics server
 
-Scale only the app (2 minimum, 10 maximum replicas)
-Test your scaler works by load testing
-You could use Apache Bench (ab) for load testing
-Post link to your documentation in the chat around COB
+**the metrics server collects tthe resources usage data of your kube cluster**
+
+1. install using this cmd ```kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml```
+2. once installed you can check the metric server deployment logs in the namespace
+```kubectl get pods -n kube-system | grep metrics-server```
+3. Edit the metric server deployment using ```kubectl edit deployment metrics-server -n kube-system```
+4. add the argument ```--kubelet-insecure-tls``` under spec -> template -> spec -> containers -> args 
+5. this is bypass an error automatically
+ 
+![alt text](images/insecureimage-1.png)
+
+1. save and exit
+2. restart the metric server deployment ```kubectl rollout restart deployment metrics-server -n kube-system```
+3. confirm your metric server is collecting the metrics - run ```kubectl top nodes```
+
+![alt text](images/tonodesimage-2.png)
+
+1. ```kubectl top pods```
+
+![alt text](images/toppodsimage-3.png)
+
+1. edit the front page deployment yml and add 
+```yml
+resources:
+          requests:
+            cpu: 200m
+          limits:
+            cpu: 500m
+```
+
+1. load up the port with requests ```ab -n 20000 -c 200 http://localhost:30001/```
+
+![alt text](images/loadreqimage-4.png)
+
+1. check that more pods have been created ```kubectl get pods```
+
+![alt text](images/moregetpodsimage-5.png)
+
+1. you can see hpa description by using ``` kubectl describe hpa app-hpa```
+
+![alt text](images/describehpaimage-6.png)
+
 

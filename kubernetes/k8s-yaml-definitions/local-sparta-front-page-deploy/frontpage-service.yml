@@ -11,4 +11,4 @@ spec:
     targetPort: 3000
   selector:
     app: nodejs
-  type: NodePort
+  type: NodePort  #changed from NodePort to LoadBalancer to get the external ip for HPA

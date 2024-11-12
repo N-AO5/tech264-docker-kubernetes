@@ -26,3 +26,8 @@ spec:
           value: "mongodb://mongodb-svc.default.svc.cluster.local:27017/posts"
        # command: ["/bin/sh", "-c"]
        # args: ["node seeds/seed.js && npm start app.js"]
+        resources:
+          requests:
+            cpu: 200m
+          limits:
+            cpu: 500m
